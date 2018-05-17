@@ -1,0 +1,32 @@
+{
+  "name": "cosjs.loader",
+  "description": "loader",
+  "version": "0.0.2",
+  "main": "./index.js",
+  "author": {
+    "name": "wanchao.huang",
+    "email": "hwclegend@163.com"
+  },
+  "keywords": [ "game", "loader" ],
+  "licenses": [
+    {
+      "type": "Apache License, Version 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0"
+    }
+  ],
+  "dependencies": {},
+  "engines": {
+    "node": "4.0+"
+  },
+  "directories": {
+    "lib": "./lib/"
+  },
+  "repository": {
+    "type": "https",
+    "url": "https://github.com/hwclegend/cosjs.loader.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hwclegend/cosjs.loader/issues"
+  },
+  "homepage": "https://github.com/hwclegend/cosjs.loader"
+}
