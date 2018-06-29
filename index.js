@@ -2,15 +2,18 @@
 const fs = require('fs');
 //模块加载器
 
-function loader(path,ext){
+
+function loader(path,safe){
     if (!(this instanceof loader)) {
-        return new loader(path,ext);
+        return new loader(path,safe);
     }
-    this._fileExt      = ext || ['.js','.json','.node'];
-    this._safeMode     = false;
-    this._pathCache    = new Set();
-    this._moduleCache  = {};
-    this.addPath(path);
+    this.ext = ['.js','.json','.node'];
+    this._safeMode     = safe|| false;
+    this._pathCache   = new Set();
+    this._moduleCache = {};
+    if(path) {
+        this.addPath(path);
+    }
 }
 
 module.exports = loader;
@@ -64,11 +67,25 @@ loader.prototype.addPath = function(path) {
     if(!path){
         return;
     }
-    if(this._pathCache.has(path)){
-        return;
+    if(typeof path==='object' &&(path instanceof loader) ){
+        //合并路径
+        for(let p of path._pathCache){
+            this._pathCache.add(p);
+        }
+        //合并模块
+        for(let k in path._moduleCache){
+            if( !this._moduleCache[k] || !this._safeMode ){
+                this._moduleCache[k] = path._moduleCache[k];
+            }
+        }
     }
-    this._pathCache.add(path);
-    getFiles.call(this, path);
+    else {
+        if (this._pathCache.has(path)) {
+            return;
+        }
+        this._pathCache.add(path);
+        getFiles.call(this, path);
+    }
 }
 
 loader.prototype.forEach = function(callback){
@@ -112,7 +129,7 @@ function filesForEach(root,dir,name){
     }
 
     let ext = FSPath.extname(name);
-    if(this._fileExt.indexOf(ext) >=0){
+    if(this.ext.indexOf(ext) >=0){
         let api = realName.replace(ext,'');
         if( this._safeMode && this._moduleCache[api] ){
             console.log('file['+api+'] exist');
