@@ -52,16 +52,6 @@ loader.prototype.parse = function(name){
     }
 }
 
-//重新加载
-loader.prototype.reload = function(){
-    for(let k in this._moduleCache){
-        let id = require.resolve(this._moduleCache[k]);
-        if(id){
-            delete require.cache[id];
-        }
-    }
-}
-
 
 loader.prototype.addPath = function(path) {
     if(!path){
