@@ -3,14 +3,14 @@ const fs = require('fs');
 //模块加载器
 
 
-function loader(path,safe){
+function loader(path,safe,ext){
     if (!(this instanceof loader)) {
-        return new loader(path,safe);
+        return new loader(path,safe,ext);
     }
-    this.ext = ['.js','.json','.node'];
+    this._fileExt      = ext || ['.js','.json','.node'];
     this._safeMode     = safe|| false;
-    this._pathCache   = new Set();
-    this._moduleCache = {};
+    this._pathCache    = new Set();
+    this._moduleCache  = {};
     if(path) {
         this.addPath(path);
     }
@@ -119,7 +119,7 @@ function filesForEach(root,dir,name){
     }
 
     let ext = FSPath.extname(name);
-    if(this.ext.indexOf(ext) >=0){
+    if(this._fileExt.indexOf(ext) >=0){
         let api = realName.replace(ext,'');
         if( this._safeMode && this._moduleCache[api] ){
             console.log('file['+api+'] exist');
