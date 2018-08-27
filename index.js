@@ -8,7 +8,7 @@ function loader(path,safe,ext){
         return new loader(path,safe,ext);
     }
     this._fileExt      = ext || ['.js','.json','.node'];
-    this._safeMode     = safe|| false;
+    this._safeMode     = safe||0;   //0：覆盖，1：合并，2：禁止
     this._pathCache    = new Set();
     this._moduleCache  = {};
     if(path) {
@@ -18,10 +18,10 @@ function loader(path,safe,ext){
 
 module.exports = loader;
 
+
+
 loader.prototype.require = function(name){
-    if(name[0] !== '/'){
-        name = '/' + name;
-    }
+    name = real_name(name);
     if( !this._moduleCache[name] ){
         return null;
     }
@@ -53,30 +53,20 @@ loader.prototype.parse = function(name){
 }
 
 
-loader.prototype.addPath = function(path) {
-    if(!path){
+loader.prototype.addPath = function(path,namespace) {
+    if( !path || this._pathCache.has(path)){
         return;
     }
-    if(typeof path==='object' &&(path instanceof loader) ){
-        //合并路径
-        for(let p of path._pathCache){
-            this._pathCache.add(p);
-        }
-        //合并模块
-        for(let k in path._moduleCache){
-            if( !this._moduleCache[k] || !this._safeMode ){
-                this._moduleCache[k] = path._moduleCache[k];
-            }
-        }
-    }
-    else {
-        if (this._pathCache.has(path)) {
-            return;
-        }
-        this._pathCache.add(path);
-        getFiles.call(this, path);
-    }
+    namespace = real_name(namespace);
+    this._pathCache.add(path);
+    getFiles.call(this, path,namespace);
 }
+
+loader.prototype.addFile = function(api,path) {
+    api = real_name(api);
+    newly_file.call(this,api,path)
+}
+
 
 loader.prototype.forEach = function(callback){
     for(let k in this._moduleCache){
@@ -84,7 +74,7 @@ loader.prototype.forEach = function(callback){
     }
 }
 
-function getFiles(root,dir) {
+function getFiles(root,dir,namespace) {
     dir = dir||'/';
     let stats, path = root + dir;
     try {
@@ -103,13 +93,13 @@ function getFiles(root,dir) {
     if(!files || !files.length){
         return;
     }
-    files.forEach( (name)=>{
-        filesForEach.call(this,root,dir,name);
-    })
+    for(let name of files){
+        filesForEach.call(this,root,dir,name,namespace);
+    }
 }
 
 
-function filesForEach(root,dir,name){
+function filesForEach(root,dir,name,namespace){
     let FSPath = require('path');
     let realPath = FSPath.resolve([root,dir,name].join('/'));
     let realName = dir+name;
@@ -121,11 +111,45 @@ function filesForEach(root,dir,name){
     let ext = FSPath.extname(name);
     if(this._fileExt.indexOf(ext) >=0){
         let api = realName.replace(ext,'');
-        if( this._safeMode && this._moduleCache[api] ){
-            console.log('file['+api+'] exist');
+        if(namespace){
+            api = [namespace,api].join("");
         }
-        else{
-            this._moduleCache[api] = realPath;
+        newly_file.call(this,api,realPath)
+    }
+}
+
+function real_name(name){
+    if( name && name.substr(0,1) !== '/'){
+        return '/' + name;
+    }
+    else{
+        return name;
+    }
+}
+
+
+function newly_file(api,path){
+    if( !this._moduleCache[api] || !this._safeMode  ){
+        this._moduleCache[api] = path;
+    }
+    else if( this._safeMode == 1 ){
+        merge_file.call(this,api,path)
+    }
+    else{
+        console.log('file['+api+'] exist');
+    }
+}
+
+
+function merge_file(api,path){
+    let data = this.require(api);
+    if(!data){
+        this._moduleCache[api] = path;
+    }
+    else{
+        let newData = require(path);
+        if(newData){
+            Object.assign(data,newData)
         }
     }
 }
