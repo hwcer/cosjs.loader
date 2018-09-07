@@ -64,12 +64,19 @@ loader.prototype.addPath = function(path,namespace) {
 }
 
 loader.prototype.addFile = function(path,namespace) {
-    let ext = FSPath.extname(path);
-    let name = FSPath.basename(path);
-    name = name.replace(ext,'');
-    let api = namespace ? [namespace,name].join("/") : name;
-    api = real_name(api);
-    newly_file.call(this,api,path)
+    if(Array.isArray(path)){
+        for(let p of path){
+            this.addFile(p,namespace)
+        }
+    }
+    else {
+        let ext = FSPath.extname(path);
+        let name = FSPath.basename(path);
+        name = name.replace(ext, '');
+        let api = namespace ? [namespace, name].join("/") : name;
+        api = real_name(api);
+        newly_file.call(this, api, path)
+    }
 }
 
 
