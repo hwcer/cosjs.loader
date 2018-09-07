@@ -1,5 +1,6 @@
 ﻿"use strict";
 const fs = require('fs');
+const FSPath = require('path');
 //模块加载器
 
 
@@ -62,7 +63,11 @@ loader.prototype.addPath = function(path,namespace) {
     getFiles.call(this, path,namespace);
 }
 
-loader.prototype.addFile = function(api,path) {
+loader.prototype.addFile = function(path,namespace) {
+    let ext = FSPath.extname(path);
+    let name = FSPath.basename(path);
+    name = name.replace(ext,'');
+    let api = namespace ? [namespace,name].join("/") : name;
     api = real_name(api);
     newly_file.call(this,api,path)
 }
@@ -100,9 +105,8 @@ function getFiles(root,dir,namespace) {
 
 
 function filesForEach(root,dir,name,namespace){
-    let FSPath = require('path');
     let realPath = FSPath.resolve([root,dir,name].join('/'));
-    let realName = dir+name;
+    let realName = [dir,name].join("");
     let stats = fs.statSync(realPath);
     if (stats.isDirectory()) {
         return getFiles.call(this,root,realName+'/');
