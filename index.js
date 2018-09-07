@@ -70,11 +70,12 @@ loader.prototype.addFile = function(path,namespace) {
         }
     }
     else {
-        let ext = FSPath.extname(path);
-        let name = FSPath.basename(path);
-        name = name.replace(ext, '');
-        let api = namespace ? [namespace, name].join("/") : name;
-        api = real_name(api);
+        if(!namespace){
+            let ext = FSPath.extname(path);
+            let name = FSPath.basename(path);
+            namespace = name.replace(ext, '');
+        }
+        let api = real_name(namespace);
         newly_file.call(this, api, path)
     }
 }
